@@ -131,7 +131,7 @@ def create_pull_request(repo, branch, addon_id, addon_info):
         auth=(gh_username, gh_token)
     )
     print(resp.json())
-    if not resp.json():
+    if resp.status_code == 200 and not resp.json():
         print('Submitting pull request...')
         payload = {
             'title': '[{}] {}'.format(addon_id, addon_info.version),
@@ -152,8 +152,12 @@ def create_pull_request(repo, branch, addon_id, addon_info):
             )
         print('Pull request submitted successfully:')
         print(resp.text)
-    else:
+    elif resp.status_code == 200 and resp.json():
         print(
             'Pull request in {} for {}:{} already exists.'.format(
                 branch, gh_username, addon_id)
+        )
+    else:
+        raise RuntimeError(
+            'Unexpected GitHub error: {}'.format(resp.status_code)
         )
