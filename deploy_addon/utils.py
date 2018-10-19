@@ -59,7 +59,7 @@ def get_addon_info(xml_path):
     addon_tag = tree.getroot()
     descr_tag = addon_tag.find('.//description[@lang="en_GB"]')
     news_tag = addon_tag.find('.//news')
-    if news_tag:
+    if news_tag is not None:
         news = news_tag.text
     else:
         news = ''
