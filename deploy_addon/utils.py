@@ -17,7 +17,7 @@ __all__ = [
 AddonInfo = namedtuple('AddonInfo', ['name', 'version', 'description', 'news'])
 
 REPO_URL_MASK = 'https://{gh_token}@github.com/{repo_slug}.git'
-PR_ENDPOINT = 'https://api.github.com/xbmc/{}/pulls'
+PR_ENDPOINT = 'https://api.github.com/repos/xbmc/{}/pulls'
 
 
 def clean_pyc(directory):
