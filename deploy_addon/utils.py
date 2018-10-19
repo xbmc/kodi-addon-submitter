@@ -99,7 +99,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
     shell('git', 'remote', 'add', 'upstream',
           'https://github.com/xbmc/{}.git'.format(repo))
     shell('git', 'fetch', 'upstream')
-    shell('git', 'checkout', '-b', branch, 'track', 'origin/' + branch)
+    shell('git', 'checkout', '-b', branch, '--track', 'origin/' + branch)
     shell('git', 'merge', 'upstream/' + branch)
     shell('git', 'branch', '-D', addon_id, check=False)
     shell('git', 'checkout', '-b', addon_id)
