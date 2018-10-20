@@ -18,7 +18,7 @@ __all__ = [
 
 AddonInfo = namedtuple('AddonInfo', ['name', 'version', 'description', 'news'])
 
-REPO_URL_MASK = 'https://{gh_token}@github.com/{repo_slug}.git'
+REPO_URL_MASK = 'https://{}@github.com/{}.git'
 PR_ENDPOINT = 'https://api.github.com/repos/xbmc/{}/pulls'
 
 devnull = open(os.devnull, 'w')
@@ -113,8 +113,8 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
     full_name = os.environ['FULL_NAME']
     email = os.environ['EMAIL']
     repo_fork = REPO_URL_MASK.format(
-        gh_token=gh_token,
-        repo_slug='{}/{}'.format(gh_username, repo)
+        gh_token,
+        '{}/{}'.format(gh_username, repo)
     )
     shell('git', 'clone', repo_fork)
     os.chdir(repo)
