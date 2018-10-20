@@ -1,4 +1,5 @@
-from __future__ import print_function, unicode_literals
+from __future__ import unicode_literals
+import logging
 import os
 import shutil
 import subprocess
@@ -21,6 +22,13 @@ REPO_URL_MASK = 'https://{gh_token}@github.com/{repo_slug}.git'
 PR_ENDPOINT = 'https://api.github.com/repos/xbmc/{}/pulls'
 
 devnull = open(os.devnull, 'w')
+
+logging.basicConfig(level=10, format='%(name)s - %(levelname)s: %(message)s')
+logger = logging.getLogger('addon-submitter')
+
+
+class AddonSubmissionError(Exception):
+    pass
 
 
 def clean_pyc(directory):
@@ -51,10 +59,10 @@ def create_zip(zip_name, work_dir, addon_id):
     :param addon_id: addon_id ID
     :type addon_id: str
     """
-    print('Creating ZIP file...')
+    logger.info('Creating ZIP file...')
     clean_pyc(os.path.join(work_dir, addon_id))
     shutil.make_archive(zip_name, 'zip', root_dir=work_dir, base_dir=addon_id)
-    print('ZIP created successfully.')
+    logger.info('ZIP created successfully.')
 
 
 def get_addon_info(xml_path):
@@ -85,7 +93,7 @@ def shell(*args, check=True):
 
 
 def create_addon_branch(work_dir, repo, branch, addon_id, version):
-    print('Creatind addon branch...')
+    logger.info('Creatind addon branch...')
     gh_username = os.environ['GH_USERNAME']
     gh_token = os.environ['GH_TOKEN']
     full_name = os.environ['FULL_NAME']
@@ -116,13 +124,13 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
         '-m', '"[{}] {}"'.format(addon_id, version)
     )
     shell('git', 'push', '-f', '-q', 'origin', addon_id)
-    print('Addon branch created successfully.')
+    logger.info('Addon branch created successfully.')
 
 
 def create_pull_request(repo, branch, addon_id, addon_info):
     gh_username = os.environ['GH_USERNAME']
     gh_token = os.environ['GH_TOKEN']
-    print('Checking pull request...')
+    logger.info('Checking pull request...')
     resp = requests.get(
         PR_ENDPOINT.format(repo),
         params={
@@ -132,7 +140,7 @@ def create_pull_request(repo, branch, addon_id, addon_info):
         headers={'Accept': 'application/vnd.github.v3+json'},
         auth=(gh_username, gh_token)
     )
-    print(resp.json())
+    logger.debug(resp.json())
     if resp.status_code == 200 and not resp.json():
         print('Submitting pull request...')
         payload = {
@@ -149,17 +157,17 @@ def create_pull_request(repo, branch, addon_id, addon_info):
             auth=(gh_username, gh_token)
         )
         if resp.status_code != 201:
-            raise RuntimeError(
+            raise AddonSubmissionError(
                 'GitHub API error: {}\n{}'.format(resp.status_code, resp.text)
             )
-        print('Pull request submitted successfully:')
-        print(resp.text)
+        logger.debug(resp.json())
+        logger.info('Pull request submitted successfully:')
     elif resp.status_code == 200 and resp.json():
-        print(
+        logger.info(
             'Pull request in {} for {}:{} already exists.'.format(
                 branch, gh_username, addon_id)
         )
     else:
-        raise RuntimeError(
+        raise AddonSubmissionError(
             'Unexpected GitHub error: {}'.format(resp.status_code)
         )
