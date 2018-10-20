@@ -66,6 +66,10 @@ def create_zip(zip_name, work_dir, addon_id):
 
 
 def get_addon_info(xml_path):
+    """Extract addon info from addon.xml
+
+    :param xml_path: path to addon.xml
+    """
     tree = etree.parse(xml_path)
     addon_tag = tree.getroot()
     descr_tag = addon_tag.find('.//description[@lang="en_GB"]')
@@ -83,6 +87,7 @@ def get_addon_info(xml_path):
 
 
 def shell(*args, check=True):
+    """Execute shell command"""
     if sys.version_info >= (3, 5):
         subprocess.run(args, check=check, stdout=devnull, stderr=devnull)
     else:
@@ -93,6 +98,15 @@ def shell(*args, check=True):
 
 
 def create_addon_branch(work_dir, repo, branch, addon_id, version):
+    """ Create and addon branch in your fork of the respective addon repo
+
+    :param work_dir: working directory
+    :param repo: addon repo name, e.g. 'repo-scripts' or 'repo-plugins'
+    :param branch: repo branch that corresponds to Kodi version codename,
+        e.g. 'leia'
+    :param addon_id: addon ID, e.g. 'plugin.video.example'
+    :param version: addon version
+    """
     logger.info('Creatind addon branch...')
     gh_username = os.environ['GH_USERNAME']
     gh_token = os.environ['GH_TOKEN']
@@ -128,6 +142,14 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
 
 
 def create_pull_request(repo, branch, addon_id, addon_info):
+    """Create a pull request in the official repo on GitHub
+
+    :param repo: addon repo name, e.g. 'repo-scripts' or 'repo-plugins'
+    :param branch: repo branch that corresponds to Kodi version codename,
+        e.g. 'leia'
+    :param addon_id: addon ID, e.g. 'plugin.video.example'
+    :param addon_info: AddonInfo object
+    """
     gh_username = os.environ['GH_USERNAME']
     gh_token = os.environ['GH_TOKEN']
     logger.info('Checking pull request...')
