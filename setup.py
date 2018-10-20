@@ -1,13 +1,13 @@
 from setuptools import setup
-from deploy_addon import __version__
+from addon_submitter import __version__
 
 setup(
-    name='deploy-addon',
+    name='addon-submitter',
     version=__version__,
     author='Roman V.M.',
-    packages=['deploy_addon'],
+    packages=['addon_submitter'],
     entry_points={
-        'console_scripts': ['deploy-addon=deploy_addon.__main__:main'],
+        'console_scripts': ['submit-addon=addon_submitter.__main__:main'],
     },
     install_requires=['requests'],
     zip_safe=False,
