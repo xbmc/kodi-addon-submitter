@@ -8,7 +8,8 @@ work_dir = os.getcwd()
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description='Kodi addon deployment utilities'
+        description='CLI utility for submitting Kodi addons '
+        'to the official addon repository'
     )
     parser.add_argument('addon_id', nargs='?', help='Addon ID')
     parser.add_argument('-z', '--zip', action='store_true',
