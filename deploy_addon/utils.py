@@ -1,9 +1,10 @@
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 import os
 import shutil
 import subprocess
 import sys
 from collections import namedtuple
+from io import open
 from xml.etree import ElementTree as etree
 import requests
 
@@ -18,6 +19,8 @@ AddonInfo = namedtuple('AddonInfo', ['name', 'version', 'description', 'news'])
 
 REPO_URL_MASK = 'https://{gh_token}@github.com/{repo_slug}.git'
 PR_ENDPOINT = 'https://api.github.com/repos/xbmc/{}/pulls'
+
+devnull = open(os.devnull, 'w')
 
 
 def clean_pyc(directory):
@@ -72,7 +75,6 @@ def get_addon_info(xml_path):
 
 
 def shell(*args, check=True):
-    devnull = open(os.devnull, 'w')
     if sys.version_info >= (3, 5):
         subprocess.run(args, check=check, stdout=devnull, stderr=devnull)
     else:
