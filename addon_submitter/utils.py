@@ -164,7 +164,7 @@ def create_pull_request(repo, branch, addon_id, addon_info):
     )
     logger.debug(resp.json())
     if resp.status_code == 200 and not resp.json():
-        print('Submitting pull request...')
+        logger.info('Submitting pull request...')
         payload = {
             'title': '[{}] {}'.format(addon_id, addon_info.version),
             'head': '{}:{}'.format(gh_username, addon_id),
