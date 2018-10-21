@@ -110,7 +110,6 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
     logger.info('Creatind addon branch...')
     gh_username = os.environ['GH_USERNAME']
     gh_token = os.environ['GH_TOKEN']
-    full_name = os.environ['FULL_NAME']
     email = os.environ['EMAIL']
     repo_fork = REPO_URL_MASK.format(
         gh_token,
@@ -121,7 +120,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
         shutil.rmtree(repo_dir)
     shell('git', 'clone', repo_fork)
     os.chdir(repo)
-    shell('git', 'config', 'user.name', '"{}"'.format(full_name))
+    shell('git', 'config', 'user.name', '"{}"'.format(gh_username))
     shell('git', 'config', 'user.email', email)
     shell('git', 'remote', 'add', 'upstream',
           'https://github.com/xbmc/{}.git'.format(repo))
