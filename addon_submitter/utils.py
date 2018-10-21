@@ -116,6 +116,9 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
         gh_token,
         '{}/{}'.format(gh_username, repo)
     )
+    repo_dir = os.path.join(work_dir, repo)
+    if os.path.exists(repo_dir):
+        shutil.rmtree(repo_dir)
     shell('git', 'clone', repo_fork)
     os.chdir(repo)
     shell('git', 'config', 'user.name', '"{}"'.format(full_name))
