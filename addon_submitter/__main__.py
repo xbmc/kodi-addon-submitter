@@ -14,9 +14,9 @@ def parse_arguments():
     parser.add_argument('addon_id', nargs='?', help='Addon ID')
     parser.add_argument('-z', '--zip', action='store_true',
                         help='Create a .zip file')
-    parser.add_argument('-r', '--repo', nargs='?', default='repo-scripts',
+    parser.add_argument('-r', '--repo', nargs='?',
                         help='GitHub repo for this addon type')
-    parser.add_argument('-b', '--branch', nargs='?', default='krypton',
+    parser.add_argument('-b', '--branch', nargs='?',
                         help='Addon repo branch (Kodi version codename)')
     parser.add_argument('--push-branch', action='store_true',
                         help='Push addon branch to addon repo fork')
