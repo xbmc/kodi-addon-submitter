@@ -81,7 +81,7 @@ install: echo "Install test dependencies"
 script: echo "Run tests"
 before_deploy:
   - pip install git+https://github.com/romanvm/kodi-addon-submitter.git
-  - python submit-addon -z # Create an installable ZIP
+  - python submit-addon -z plugin.video.example # Create an installable ZIP
   - export RELEASE_ZIP=$(ls *.zip)
 deploy:
   # Publish an installable ZIP to GitHub Releases
