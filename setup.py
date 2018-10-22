@@ -5,6 +5,7 @@ setup(
     name='addon-submitter',
     version=__version__,
     author='Roman V.M.',
+    license='GPL v.3',
     packages=['addon_submitter'],
     entry_points={
         'console_scripts': ['submit-addon=addon_submitter.__main__:main'],
