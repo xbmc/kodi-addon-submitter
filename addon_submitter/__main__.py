@@ -14,9 +14,9 @@ def parse_arguments():
     parser.add_argument('addon_id', nargs='?', help='Addon ID')
     parser.add_argument('-z', '--zip', action='store_true',
                         help='Create a .zip file')
-    parser.add_argument('-r', '--repo', nargs='?',
+    parser.add_argument('-r', '--repo', nargs='?', default='',
                         help='GitHub repo for this addon type')
-    parser.add_argument('-b', '--branch', nargs='?',
+    parser.add_argument('-b', '--branch', nargs='?', default='',
                         help='Addon repo branch (Kodi version codename)')
     parser.add_argument('--push-branch', action='store_true',
                         help='Push addon branch to addon repo fork')
@@ -35,6 +35,10 @@ def main():
             args.addon_id + '-' + addon_info.version, work_dir, args.addon_id
         )
     if args.push_branch or args.pull_request:
+        if not (args.repo and args.branch):
+            raise utils.AddonSubmissionError(
+                'Both --repo and --branch arguments must not defined!'
+            )
         utils.create_addon_branch(
             work_dir, args.repo, args.branch, args.addon_id, addon_info.version
         )
