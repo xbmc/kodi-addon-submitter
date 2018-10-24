@@ -40,6 +40,10 @@ The script is compatible with Python 2.7 and 3+.
   - `GH_USERNAME`: your GitHub username.
   - `GH_TOKEN`: your GitHub access token with at least `public_repo` scope.
   - `EMAIL`: your email
+- It is strongly recommended to have `<news>` section in your `addon.xml`
+  that describes the changes made in the latest version being submitted.
+  The contents of the `<news>` tag will be automatically added to
+  a pull request message.
   
 ## Installation
 
