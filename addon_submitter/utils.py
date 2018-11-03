@@ -73,6 +73,12 @@ def get_addon_info(xml_path):
     tree = etree.parse(xml_path)
     addon_tag = tree.getroot()
     descr_tag = addon_tag.find('.//description[@lang="en_GB"]')
+    if descr_tag is None:
+        descr_tag = addon_tag.find('.//description[@lang="en"]')
+        if descr_tag is None:
+            raise AddonSubmissionError(
+                'Unable to find an English description in addon.xml!'
+            )
     news_tag = addon_tag.find('.//news')
     if news_tag is not None:
         news = news_tag.text
