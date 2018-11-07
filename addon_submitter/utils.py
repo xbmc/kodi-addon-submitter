@@ -43,7 +43,10 @@ def clean_pyc(directory):
     for path in paths:
         abs_path = os.path.abspath(path)
         if os.path.isdir(abs_path):
-            clean_pyc(abs_path)
+            if '__pycache__' in abs_path:
+                shutil.rmtree(abs_path)
+            else:
+                clean_pyc(abs_path)
         elif path[-4:] == '.pyc':
             os.remove(abs_path)
     os.chdir(cwd)
