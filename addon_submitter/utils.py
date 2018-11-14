@@ -127,17 +127,11 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
     repo_dir = os.path.join(work_dir, repo)
     if os.path.exists(repo_dir):
         shutil.rmtree(repo_dir)
-    shell('git', 'clone', repo_fork)
+    shell('git', 'clone', '--branch', branch, '--origin', 'upstream', '--single-branch', 'git://github.com/xbmc/{}.git'.format(repo))
     os.chdir(repo)
     shell('git', 'config', 'user.name', '{}'.format(gh_username))
     shell('git', 'config', 'user.email', email)
-    shell('git', 'remote', 'add', 'upstream',
-          'https://github.com/xbmc/{}.git'.format(repo))
-    shell('git', 'fetch', 'upstream')
-    shell('git', 'checkout', '-b', branch, '--track', 'origin/' + branch)
-    shell('git', 'merge', 'upstream/' + branch)
-    shell('git', 'branch', '-D', addon_id, check=False)
-    shell('git', 'checkout', '-b', addon_id)
+    shell('git', 'checkout', '-b', addon_id, 'upstream/{}'.format(branch))
     clean_pyc(os.path.join(work_dir, addon_id))
     shutil.rmtree(os.path.join(work_dir, repo, addon_id), ignore_errors=True)
     shutil.copytree(
@@ -148,7 +142,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
         'git', 'commit',
         '-m', '[{}] {}'.format(addon_id, version)
     )
-    shell('git', 'push', '-f', '-q', 'origin', addon_id)
+    shell('git', 'push', '-f', '-q', repo_fork, addon_id)
     logger.info('Addon branch created successfully.')
 
 
