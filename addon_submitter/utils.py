@@ -31,40 +31,21 @@ class AddonSubmissionError(Exception):
     pass
 
 
-def clean_pyc(directory):
-    """Clean .pyc files recursively in a directory
-    
-    :param directory: root directory to clean
-    :type directory: str
-    """
-    cwd = os.getcwd()
-    os.chdir(directory)
-    paths = os.listdir(directory)
-    for path in paths:
-        abs_path = os.path.abspath(path)
-        if os.path.isdir(abs_path):
-            if '__pycache__' in abs_path:
-                shutil.rmtree(abs_path)
-            else:
-                clean_pyc(abs_path)
-        elif path[-4:] == '.pyc':
-            os.remove(abs_path)
-    os.chdir(cwd)
-
-
-def create_zip(zip_name, work_dir, addon_id):
+def create_zip(zip_name, addon_id, subdirectory):
     """Create a .zip for an addon
     
     :param zip_name: .zip file name
     :type zip_name: str
-    :param work_dir: working directory
-    :type work_dir: str
     :param addon_id: addon_id ID
     :type addon_id: str
+    :param subdirectory:
+    :type addon_id: bool
     """
     logger.info('Creating ZIP file...')
-    clean_pyc(os.path.join(work_dir, addon_id))
-    shutil.make_archive(zip_name, 'zip', root_dir=work_dir, base_dir=addon_id)
+    if subdirectory:
+        shell('git', 'archive', '-o', '{}.zip'.format(zip_name), 'HEAD', '--', addon_id)
+    else:
+        shell('git', 'archive', '-o', '{}.zip'.format(zip_name), '--prefix', '{}/'.format(addon_id), 'HEAD')
     logger.info('ZIP created successfully.')
 
 
@@ -106,7 +87,7 @@ def shell(*args, check=True):
             subprocess.call(args, stdout=devnull, stderr=devnull)
 
 
-def create_addon_branch(work_dir, repo, branch, addon_id, version):
+def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory):
     """ Create and addon branch in your fork of the respective addon repo
 
     :param work_dir: working directory
@@ -115,6 +96,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
         e.g. 'leia'
     :param addon_id: addon ID, e.g. 'plugin.video.example'
     :param version: addon version
+    :param subdirectory: 
     """
     logger.info('Creatind addon branch...')
     gh_username = os.environ['GH_USERNAME']
@@ -127,28 +109,24 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
     repo_dir = os.path.join(work_dir, repo)
     if os.path.exists(repo_dir):
         shutil.rmtree(repo_dir)
-    shell('git', 'clone', repo_fork)
+    shell('git', 'clone', '--branch', branch, '--origin', 'upstream', '--single-branch', 'git://github.com/xbmc/{}.git'.format(repo))
     os.chdir(repo)
-    shell('git', 'config', 'user.name', '"{}"'.format(gh_username))
+    shell('git', 'config', 'user.name', '{}'.format(gh_username))
     shell('git', 'config', 'user.email', email)
-    shell('git', 'remote', 'add', 'upstream',
-          'https://github.com/xbmc/{}.git'.format(repo))
-    shell('git', 'fetch', 'upstream')
-    shell('git', 'checkout', '-b', branch, '--track', 'origin/' + branch)
-    shell('git', 'merge', 'upstream/' + branch)
-    shell('git', 'branch', '-D', addon_id, check=False)
-    shell('git', 'checkout', '-b', addon_id)
-    clean_pyc(os.path.join(work_dir, addon_id))
+    shell('git', 'checkout', '-b', addon_id, 'upstream/{}'.format(branch))
     shutil.rmtree(os.path.join(work_dir, repo, addon_id), ignore_errors=True)
-    shutil.copytree(
-        os.path.join(work_dir, addon_id), os.path.join(work_dir, repo, addon_id)
-    )
-    shell('git', 'add', '--all', '.')
+    os.chdir('..')
+    if subdirectory:
+        shell('sh', '-c', 'git archive --format tgz HEAD -- {} | tar zxf - -C {}'.format(addon_id, repo_dir))
+    else:
+        shell('sh', '-c', 'git archive --format tgz HEAD --prefix {}/ | tar zxf - -C {}'.format(addon_id, repo_dir))
+    os.chdir(repo)
+    shell('git', 'add', '--', addon_id)
     shell(
         'git', 'commit',
         '-m', '[{}] {}'.format(addon_id, version)
     )
-    shell('git', 'push', '-f', '-q', 'origin', addon_id)
+    shell('git', 'push', '-f', '-q', repo_fork, addon_id)
     logger.info('Addon branch created successfully.')
 
 

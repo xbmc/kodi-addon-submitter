@@ -12,28 +12,46 @@ The script is compatible with Python 2.7 and 3+.
 
 ## Prerequisites
 
-- Your addon files must be located in a separate addon directory, e.g.
- `/plugin.video.example` inside your Git repository. That is, your Git repo for
-  the addon must have the following layout:
-  ```
-  /<git-repo-directory>/
-  |
-  +--/plugin.video.example/
-  |  |
-  |  +--/resources/
-  |  |  |
-  |  |  ...
-  |  +--addon.xml
-  |  +--fanart.jpg
-  |  +--icon.png
-  |
-  +--.gitignore
-  +--.travis.yml
-  +--Readme.md
-  ```
-  Such layout is preferable over "everything in the repo root directory"
-  approach because it allows not to pollute your addon directory with unnecessary
-  files, such as `.gitignore`, `.travis.yml` etc.
+- Your addon files must have one of the following formats
+  - Your addon files must be located in the root directory inside your Git repository.
+    That is, your Git repo for the addon must have the following layout:
+    ```
+    /<git-repo-directory>/
+    |
+    |
+    +--/resources/
+    |  |
+    |  ...
+    +--addon.xml
+    +--fanart.jpg
+    +--icon.png
+    |
+    +--.gitignore
+    +--.travis.yml
+    +--Readme.md
+    ```
+    To not pollute your addon submission with unnecessary files, such as `.gitignore`, `.travis.yml` etc.
+    those can be exluded by using git-archive and setting the [export-ignore attribute]
+    (https://git-scm.com/docs/gitattributes#_creating_an_archive).
+  - Your addon files must be located in a separate addon directory, e.g.
+   `/plugin.video.example` inside your Git repository. That is, your Git repo for
+    the addon must have the following layout:
+    ```
+    /<git-repo-directory>/
+    |
+    +--/plugin.video.example/
+    |  |
+    |  +--/resources/
+    |  |  |
+    |  |  ...
+    |  +--addon.xml
+    |  +--fanart.jpg
+    |  +--icon.png
+    |
+    +--.gitignore
+    +--.travis.yml
+    +--Readme.md
+    ```
 - Fork the necessary addon repository -- `xbmc/repo-plugins` or
   `xbmc/repo-scripts` -- into your GitHub account.
 - Define the following environment variables in your CI environment:
@@ -70,6 +88,7 @@ Run `submit-addon` script with the following options:
   official Kodi addon repository, if it does not exist. If the pull request
   already exists, the script will simply update the addon branch in your
   repository fork.
+- `-s`, `--subdirectory`: The addon files are located in a separate directory
 
 Example:
 ```bash
