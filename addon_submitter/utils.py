@@ -31,27 +31,6 @@ class AddonSubmissionError(Exception):
     pass
 
 
-def clean_pyc(directory):
-    """Clean .pyc files recursively in a directory
-    
-    :param directory: root directory to clean
-    :type directory: str
-    """
-    cwd = os.getcwd()
-    os.chdir(directory)
-    paths = os.listdir(directory)
-    for path in paths:
-        abs_path = os.path.abspath(path)
-        if os.path.isdir(abs_path):
-            if '__pycache__' in abs_path:
-                shutil.rmtree(abs_path)
-            else:
-                clean_pyc(abs_path)
-        elif path[-4:] == '.pyc':
-            os.remove(abs_path)
-    os.chdir(cwd)
-
-
 def create_zip(zip_name, addon_id):
     """Create a .zip for an addon
     
@@ -129,12 +108,11 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
     shell('git', 'config', 'user.name', '{}'.format(gh_username))
     shell('git', 'config', 'user.email', email)
     shell('git', 'checkout', '-b', addon_id, 'upstream/{}'.format(branch))
-    clean_pyc(os.path.join(work_dir, addon_id))
     shutil.rmtree(os.path.join(work_dir, repo, addon_id), ignore_errors=True)
-    shutil.copytree(
-        os.path.join(work_dir, addon_id), os.path.join(work_dir, repo, addon_id)
-    )
-    shell('git', 'add', '--all', '.')
+    os.chdir('..')
+    shell('sh', '-c', 'git archive --format tgz HEAD -- {} | tar zxf - -C {}'.format(addon_id, repo_dir))
+    os.chdir(repo)
+    shell('git', 'add', '--', addon_id)
     shell(
         'git', 'commit',
         '-m', '[{}] {}'.format(addon_id, version)
