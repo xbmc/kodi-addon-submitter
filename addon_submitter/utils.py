@@ -31,16 +31,21 @@ class AddonSubmissionError(Exception):
     pass
 
 
-def create_zip(zip_name, addon_id):
+def create_zip(zip_name, addon_id, subdirectory):
     """Create a .zip for an addon
     
     :param zip_name: .zip file name
     :type zip_name: str
     :param addon_id: addon_id ID
     :type addon_id: str
+    :param subdirectory:
+    :type addon_id: bool
     """
     logger.info('Creating ZIP file...')
-    shell('git', 'archive', '-o', '{}.zip'.format(zip_name), 'HEAD', '--', addon_id)
+    if subdirectory:
+        shell('git', 'archive', '-o', '{}.zip'.format(zip_name), 'HEAD', '--', addon_id)
+    else:
+        shell('git', 'archive', '-o', '{}.zip'.format(zip_name), '--prefix', '{}/'.format(addon_id), 'HEAD')
     logger.info('ZIP created successfully.')
 
 
@@ -82,7 +87,7 @@ def shell(*args, check=True):
             subprocess.call(args, stdout=devnull, stderr=devnull)
 
 
-def create_addon_branch(work_dir, repo, branch, addon_id, version):
+def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory):
     """ Create and addon branch in your fork of the respective addon repo
 
     :param work_dir: working directory
@@ -91,6 +96,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
         e.g. 'leia'
     :param addon_id: addon ID, e.g. 'plugin.video.example'
     :param version: addon version
+    :param subdirectory: 
     """
     logger.info('Creatind addon branch...')
     gh_username = os.environ['GH_USERNAME']
@@ -110,7 +116,10 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version):
     shell('git', 'checkout', '-b', addon_id, 'upstream/{}'.format(branch))
     shutil.rmtree(os.path.join(work_dir, repo, addon_id), ignore_errors=True)
     os.chdir('..')
-    shell('sh', '-c', 'git archive --format tgz HEAD -- {} | tar zxf - -C {}'.format(addon_id, repo_dir))
+    if subdirectory:
+        shell('sh', '-c', 'git archive --format tgz HEAD -- {} | tar zxf - -C {}'.format(addon_id, repo_dir))
+    else:
+        shell('sh', '-c', 'git archive --format tgz HEAD --prefix {}/ | tar zxf - -C {}'.format(addon_id, repo_dir))
     os.chdir(repo)
     shell('git', 'add', '--', addon_id)
     shell(

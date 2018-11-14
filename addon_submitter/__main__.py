@@ -22,17 +22,18 @@ def parse_arguments():
                         help='Push addon branch to addon repo fork')
     parser.add_argument('--pull-request', action='store_true',
                         help='Create a pull request')
+    parser.add_argument('-s', '--subdirectory', action='store_true')
     return parser.parse_args()
 
 
 def main():
     args = parse_arguments()
     addon_info = utils.get_addon_info(
-        os.path.join(work_dir, args.addon_id, 'addon.xml')
+        os.path.join(work_dir, args.addon_id if args.subdirectory else '', 'addon.xml')
     )
     if args.zip:
         utils.create_zip(
-            args.addon_id + '-' + addon_info.version, args.addon_id
+            args.addon_id + '-' + addon_info.version, args.addon_id, args.subdirectory
         )
     if args.push_branch or args.pull_request:
         if not (args.repo and args.branch):
@@ -40,7 +41,7 @@ def main():
                 'Both --repo and --branch arguments must not defined!'
             )
         utils.create_addon_branch(
-            work_dir, args.repo, args.branch, args.addon_id, addon_info.version
+            work_dir, args.repo, args.branch, args.addon_id, addon_info.version, args.subdirectory
         )
     if args.pull_request:
         utils.create_pull_request(
