@@ -52,19 +52,16 @@ def clean_pyc(directory):
     os.chdir(cwd)
 
 
-def create_zip(zip_name, work_dir, addon_id):
+def create_zip(zip_name, addon_id):
     """Create a .zip for an addon
     
     :param zip_name: .zip file name
     :type zip_name: str
-    :param work_dir: working directory
-    :type work_dir: str
     :param addon_id: addon_id ID
     :type addon_id: str
     """
     logger.info('Creating ZIP file...')
-    clean_pyc(os.path.join(work_dir, addon_id))
-    shutil.make_archive(zip_name, 'zip', root_dir=work_dir, base_dir=addon_id)
+    shell('git', 'archive', '-o', '{}.zip'.format(zip_name), 'HEAD', '--', addon_id)
     logger.info('ZIP created successfully.')
 
 

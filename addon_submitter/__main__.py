@@ -32,7 +32,7 @@ def main():
     )
     if args.zip:
         utils.create_zip(
-            args.addon_id + '-' + addon_info.version, work_dir, args.addon_id
+            args.addon_id + '-' + addon_info.version, args.addon_id
         )
     if args.push_branch or args.pull_request:
         if not (args.repo and args.branch):
