@@ -88,23 +88,23 @@ Run `submit-addon` script with the following options:
   official Kodi addon repository, if it does not exist. If the pull request
   already exists, the script will simply update the addon branch in your
   repository fork.
-- `-s`, `--subdirectory`: The addon files are located in a separate directory
+- `-s`, `--subdirectory`: Addon is stored in its own directory within the git repo
 
 Example:
 ```bash
-submit-addon -r repo-plugin -b leia --pull-request plugin.video.example
+submit-addon -r repo-plugins -b leia --pull-request plugin.video.example
 ```
 
 ## Example Travis CI Configuration
 
 ```yaml
 language: python
-python: "2.7"
+python: "3.6"
 install: echo "Install test dependencies"
 script: echo "Run tests"
 before_deploy:
   - pip install git+https://github.com/romanvm/kodi-addon-submitter.git
-  - python submit-addon -z plugin.video.example # Create an installable ZIP
+  - submit-addon -z plugin.video.example # Create an installable ZIP
   - export RELEASE_ZIP=$(ls *.zip)
 deploy:
   # Publish an installable ZIP to GitHub Releases
@@ -117,7 +117,7 @@ deploy:
       tags: true
   # Submit to the official Kodi repo
   - provider: script
-    script: submit-addon -r repo-plugin -b leia --pull-request plugin.video.example
+    script: submit-addon -r repo-plugins -b leia --pull-request plugin.video.example
     on:
       tags: true
 notifications:

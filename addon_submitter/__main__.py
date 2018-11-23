@@ -22,7 +22,8 @@ def parse_arguments():
                         help='Push addon branch to addon repo fork')
     parser.add_argument('--pull-request', action='store_true',
                         help='Create a pull request')
-    parser.add_argument('-s', '--subdirectory', action='store_true')
+    parser.add_argument('-s', '--subdirectory', action='store_true',
+                        help='Addon is stored in its own directory within the git repo')
     return parser.parse_args()
 
 

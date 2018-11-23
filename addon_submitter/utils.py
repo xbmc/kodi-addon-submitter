@@ -76,8 +76,9 @@ def get_addon_info(xml_path):
     )
 
 
-def shell(*args, check=True):
+def shell(*args, **kwargs):
     """Execute shell command"""
+    check = bool(kwargs.get('check'))
     if sys.version_info >= (3, 5):
         subprocess.run(args, check=check, stdout=devnull, stderr=devnull)
     else:
