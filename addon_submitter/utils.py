@@ -16,9 +16,12 @@ __all__ = [
     'create_pull_request'
 ]
 
-AddonInfo = namedtuple('AddonInfo', ['name', 'version', 'description', 'news'])
+AddonInfo = namedtuple(
+    'AddonInfo', ['id', 'name', 'version', 'description', 'news', 'gh_repo']
+)
 
-REPO_URL_MASK = 'https://{}@github.com/{}.git'
+ADDON_REPO_URL_MASK = 'https://https://github.com/{}'
+FORK_REPO_URL_MASK = 'https://{}@github.com/{}.git'
 PR_ENDPOINT = 'https://api.github.com/repos/xbmc/{}/pulls'
 
 devnull = open(os.devnull, 'w')
@@ -68,11 +71,18 @@ def get_addon_info(xml_path):
         news = news_tag.text
     else:
         news = ''
+    repo_slug = os.environ.get('TRAVIS_REPO_SLUG')
+    if repo_slug:
+        gh_repo = ADDON_REPO_URL_MASK.format(repo_slug)
+    else:
+        gh_repo = ''
     return AddonInfo(
+        addon_tag.attrib.get('id'),
         addon_tag.attrib.get('name'),
         addon_tag.attrib.get('version'),
         descr_tag.text,
-        news
+        news,
+        gh_repo
     )
 
 
@@ -103,7 +113,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
     gh_username = os.environ['GH_USERNAME']
     gh_token = os.environ['GH_TOKEN']
     email = os.environ['EMAIL']
-    repo_fork = REPO_URL_MASK.format(
+    repo_fork = FORK_REPO_URL_MASK.format(
         gh_token,
         '{}/{}'.format(gh_username, repo)
     )
