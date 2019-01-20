@@ -46,9 +46,11 @@ def create_zip(zip_name, addon_id, subdirectory):
     """
     logger.info('Creating ZIP file...')
     if subdirectory:
-        shell('git', 'archive', '-o', '{}.zip'.format(zip_name), 'HEAD', '--', addon_id)
+        shell('git', 'archive', '-o', '{}.zip'.format(zip_name), 'HEAD', '--',
+              addon_id)
     else:
-        shell('git', 'archive', '-o', '{}.zip'.format(zip_name), '--prefix', '{}/'.format(addon_id), 'HEAD')
+        shell('git', 'archive', '-o', '{}.zip'.format(zip_name),
+              '--prefix', '{}/'.format(addon_id), 'HEAD')
     logger.info('ZIP created successfully.')
 
 
@@ -120,7 +122,8 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
     repo_dir = os.path.join(work_dir, repo)
     if os.path.exists(repo_dir):
         shutil.rmtree(repo_dir)
-    shell('git', 'clone', '--branch', branch, '--origin', 'upstream', '--single-branch', 'git://github.com/xbmc/{}.git'.format(repo))
+    shell('git', 'clone', '--branch', branch, '--origin', 'upstream',
+          '--single-branch', 'git://github.com/xbmc/{}.git'.format(repo))
     os.chdir(repo)
     shell('git', 'config', 'user.name', '{}'.format(gh_username))
     shell('git', 'config', 'user.email', email)
@@ -128,15 +131,22 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
     shutil.rmtree(os.path.join(work_dir, repo, addon_id), ignore_errors=True)
     os.chdir('..')
     if subdirectory:
-        shell('sh', '-c', 'git archive --format tgz HEAD -- {} | tar zxf - -C {}'.format(addon_id, repo_dir))
+        shell(
+            'sh', '-c',
+            'git archive --format tgz HEAD -- {} | tar zxf - -C {}'.format(
+                addon_id, repo_dir
+            )
+        )
     else:
-        shell('sh', '-c', 'git archive --format tgz HEAD --prefix {}/ | tar zxf - -C {}'.format(addon_id, repo_dir))
+        shell(
+            'sh', '-c',
+            'git archive --format tgz HEAD --prefix {}/ | tar zxf - -C {}'.format(
+                addon_id, repo_dir
+            )
+        )
     os.chdir(repo)
     shell('git', 'add', '--', addon_id)
-    shell(
-        'git', 'commit',
-        '-m', '[{}] {}'.format(addon_id, version)
-    )
+    shell('git', 'commit', '-m', '[{}] {}'.format(addon_id, version))
     shell('git', 'push', '-f', '-q', repo_fork, addon_id)
     logger.info('Addon branch created successfully.')
 
