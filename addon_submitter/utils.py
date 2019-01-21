@@ -22,7 +22,7 @@ AddonInfo = namedtuple(
 
 ADDON_REPO_URL_MASK = 'https://https://github.com/{}'
 FORK_REPO_URL_MASK = 'https://{}@github.com/{}.git'
-PR_ENDPOINT = 'https://api.github.com/repos/xbmc/{}/pulls'
+PR_ENDPOINT_MASK = 'https://api.github.com/repos/xbmc/{}/pulls'
 
 devnull = open(os.devnull, 'w')
 
@@ -164,7 +164,7 @@ def create_pull_request(repo, branch, addon_id, addon_info):
     gh_token = os.environ['GH_TOKEN']
     logger.info('Checking pull request...')
     resp = requests.get(
-        PR_ENDPOINT.format(repo),
+        PR_ENDPOINT_MASK.format(repo),
         params={
             'head': '{}:{}'.format(gh_username, addon_id),
             'base': branch,
@@ -183,7 +183,7 @@ def create_pull_request(repo, branch, addon_id, addon_info):
             'maintainer_can_modify': True,
         }
         resp = requests.post(
-            PR_ENDPOINT.format(repo),
+            PR_ENDPOINT_MASK.format(repo),
             json=payload,
             headers={'Accept': 'application/vnd.github.v3+json'},
             auth=(gh_username, gh_token)
