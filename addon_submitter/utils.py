@@ -17,12 +17,14 @@ __all__ = [
 ]
 
 AddonInfo = namedtuple(
-    'AddonInfo', ['id', 'name', 'version', 'description', 'news', 'gh_repo']
+    'AddonInfo', ['id', 'name', 'version', 'description', 'news', 'gh_url']
 )
 
 ADDON_REPO_URL_MASK = 'https://https://github.com/{}'
 FORK_REPO_URL_MASK = 'https://{}@github.com/{}.git'
 PR_ENDPOINT_MASK = 'https://api.github.com/repos/xbmc/{}/pulls'
+
+this_dir = os.path.dirname(os.path.abspath(__file__))
 
 devnull = open(os.devnull, 'w')
 
@@ -75,16 +77,16 @@ def get_addon_info(xml_path):
         news = ''
     repo_slug = os.environ.get('TRAVIS_REPO_SLUG')
     if repo_slug:
-        gh_repo = ADDON_REPO_URL_MASK.format(repo_slug)
+        gh_url = ADDON_REPO_URL_MASK.format(repo_slug)
     else:
-        gh_repo = ''
+        gh_url = ''
     return AddonInfo(
         addon_tag.attrib.get('id'),
         addon_tag.attrib.get('name'),
         addon_tag.attrib.get('version'),
         descr_tag.text,
         news,
-        gh_repo
+        gh_url
     )
 
 
@@ -175,11 +177,22 @@ def create_pull_request(repo, branch, addon_id, addon_info):
     logger.debug(resp.json())
     if resp.status_code == 200 and not resp.json():
         logger.info('Submitting pull request...')
+        with open(os.path.join(this_dir, 'pr-template.md'), 'r', encoding='utf-8') as fo:
+            template = fo.read()
+        pr_body = template.format(
+            name=addon_info.name,
+            id=addon_info.id,
+            version=addon_info.version,
+            kodi_repo_branch=branch,
+            addon_gh_url=addon_info.gh_url,
+            description=addon_info.description,
+            news=addon_info.news
+        )
         payload = {
             'title': '[{}] {}'.format(addon_id, addon_info.version),
             'head': '{}:{}'.format(gh_username, addon_id),
             'base': branch,
-            'body': '{}\n\n{}'.format(addon_info.description, addon_info.news),
+            'body': pr_body,
             'maintainer_can_modify': True,
         }
         resp = requests.post(
