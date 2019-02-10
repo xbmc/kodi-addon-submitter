@@ -177,6 +177,7 @@ def create_pull_request(repo, branch, addon_id, addon_info):
     logger.debug(resp.json())
     if resp.status_code == 200 and not resp.json():
         logger.info('Submitting pull request...')
+        logger.debug(os.path.join(this_dir, 'pr-template.md'))
         with open(os.path.join(this_dir, 'pr-template.md'), 'r', encoding='utf-8') as fo:
             template = fo.read()
         pr_body = template.format(
