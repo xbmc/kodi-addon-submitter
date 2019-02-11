@@ -1,1 +1,1 @@
-include addon_submitter/*.md
+recursive-include addon_submitter *.md

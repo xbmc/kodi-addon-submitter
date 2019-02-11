@@ -7,6 +7,7 @@ setup(
     author='Roman V.M.',
     license='GPL v.3',
     packages=['addon_submitter'],
+    package_data={'addon_submitter': ['pr-template.md']},
     entry_points={
         'console_scripts': ['submit-addon=addon_submitter.__main__:main'],
     },
