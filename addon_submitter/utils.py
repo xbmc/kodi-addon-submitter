@@ -20,7 +20,7 @@ AddonInfo = namedtuple(
     'AddonInfo', ['id', 'name', 'version', 'description', 'news', 'gh_url']
 )
 
-ADDON_REPO_URL_MASK = 'https://https://github.com/{}'
+ADDON_REPO_URL_MASK = 'https://github.com/{}'
 FORK_REPO_URL_MASK = 'https://{}@github.com/{}.git'
 PR_ENDPOINT_MASK = 'https://api.github.com/repos/xbmc/{}/pulls'
 
