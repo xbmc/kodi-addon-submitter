@@ -38,7 +38,7 @@ class AddonSubmissionError(Exception):
 
 def create_zip(zip_name, addon_id, subdirectory):
     """Create a .zip for an addon
-    
+
     :param zip_name: .zip file name
     :type zip_name: str
     :param addon_id: addon_id ID
@@ -111,9 +111,9 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
         e.g. 'leia'
     :param addon_id: addon ID, e.g. 'plugin.video.example'
     :param version: addon version
-    :param subdirectory: 
+    :param subdirectory:
     """
-    logger.info('Creatind addon branch...')
+    logger.info('Creating addon branch...')
     gh_username = os.environ['GH_USERNAME']
     gh_token = os.environ['GH_TOKEN']
     email = os.environ['EMAIL']
