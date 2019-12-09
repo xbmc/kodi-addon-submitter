@@ -41,9 +41,15 @@ def main():
             raise utils.AddonSubmissionError(
                 'Both --repo and --branch arguments must not defined!'
             )
+
+        # fork the repo if the user does not have a personal repo fork
+        if not utils.user_fork_exists(args.repo):
+            utils.create_personal_fork(args.repo)
+
         utils.create_addon_branch(
             work_dir, args.repo, args.branch, args.addon_id, addon_info.version, args.subdirectory
         )
+
     if args.pull_request:
         utils.create_pull_request(
             args.repo, args.branch, args.addon_id, addon_info
