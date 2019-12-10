@@ -8,6 +8,7 @@ from collections import namedtuple
 from io import open
 from xml.etree import ElementTree as etree
 import requests
+import time
 
 __all__ = [
     'create_zip',
@@ -23,6 +24,11 @@ AddonInfo = namedtuple(
 ADDON_REPO_URL_MASK = 'https://github.com/{}'
 FORK_REPO_URL_MASK = 'https://{}@github.com/{}.git'
 PR_ENDPOINT_MASK = 'https://api.github.com/repos/xbmc/{}/pulls'
+FORK_ENDPOINT_MASK = 'https://api.github.com/repos/xbmc/{}/forks'
+USER_FORK_ENDPOINT_MASK = 'https://api.github.com/repos/{}/{}'
+
+GH_USERNAME = os.environ['GH_USERNAME']
+GH_TOKEN = os.environ['GH_TOKEN']
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -114,12 +120,10 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
     :param subdirectory:
     """
     logger.info('Creating addon branch...')
-    gh_username = os.environ['GH_USERNAME']
-    gh_token = os.environ['GH_TOKEN']
     email = os.environ['EMAIL']
     repo_fork = FORK_REPO_URL_MASK.format(
-        gh_token,
-        '{}/{}'.format(gh_username, repo)
+        GH_USERNAME,
+        '{}/{}'.format(GH_USERNAME, repo)
     )
     repo_dir = os.path.join(work_dir, repo)
     if os.path.exists(repo_dir):
@@ -127,7 +131,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
     shell('git', 'clone', '--branch', branch, '--origin', 'upstream',
           '--single-branch', 'git://github.com/xbmc/{}.git'.format(repo))
     os.chdir(repo)
-    shell('git', 'config', 'user.name', '{}'.format(gh_username))
+    shell('git', 'config', 'user.name', '{}'.format(GH_USERNAME))
     shell('git', 'config', 'user.email', email)
     shell('git', 'checkout', '-b', addon_id, 'upstream/{}'.format(branch))
     shutil.rmtree(os.path.join(work_dir, repo, addon_id), ignore_errors=True)
@@ -153,6 +157,51 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
     logger.info('Addon branch created successfully.')
 
 
+def create_personal_fork(repo):
+    """Create a personal fork for the official repo on GitHub
+
+    :param repo: addon repo name, e.g. 'repo-scripts' or 'repo-plugins'
+    """
+    resp = requests.post(
+        FORK_ENDPOINT_MASK.format(
+            repo
+        ),
+        headers={'Accept': 'application/vnd.github.v3+json'},
+        auth=(GH_USERNAME, GH_TOKEN)
+    )
+    # see: https://developer.github.com/v3/repos/forks/#create-a-forkCheck
+    # this is an async operation, wait for a maximum of 5 minutes for the fork
+    # to be created (with 20 seconds pause between checks)
+    elapsed_time = 0
+    while elapsed_time < 5 * 60:
+        if not user_fork_exists(repo):
+            time.sleep(20)
+            elapsed_time += 20
+        else:
+            break;
+    raise AddonSubmissionError("Timeout waiting for fork creation exceeded")
+
+
+def user_fork_exists(repo):
+    """Check if the user has a fork of the repository on Github
+
+    :param repo: addon repo name, e.g. 'repo-scripts' or 'repo-plugins'
+    """
+    resp = requests.get(
+        USER_FORK_ENDPOINT_MASK.format(
+            GH_USERNAME,
+            repo
+        ),
+        headers={'Accept': 'application/vnd.github.v3+json'},
+        params={
+            'type': 'all'
+        },
+        auth=(GH_USERNAME, GH_TOKEN)
+    )
+    resp_json = resp.json()
+    return resp.status_code and resp_json.get('fork')
+
+
 def create_pull_request(repo, branch, addon_id, addon_info):
     """Create a pull request in the official repo on GitHub
 
@@ -162,17 +211,15 @@ def create_pull_request(repo, branch, addon_id, addon_info):
     :param addon_id: addon ID, e.g. 'plugin.video.example'
     :param addon_info: AddonInfo object
     """
-    gh_username = os.environ['GH_USERNAME']
-    gh_token = os.environ['GH_TOKEN']
     logger.info('Checking pull request...')
     resp = requests.get(
         PR_ENDPOINT_MASK.format(repo),
         params={
-            'head': '{}:{}'.format(gh_username, addon_id),
+            'head': '{}:{}'.format(GH_USERNAME, addon_id),
             'base': branch,
         },
         headers={'Accept': 'application/vnd.github.v3+json'},
-        auth=(gh_username, gh_token)
+        auth=(GH_USERNAME, GH_TOKEN)
     )
     logger.debug(resp.json())
     if resp.status_code == 200 and not resp.json():
@@ -190,7 +237,7 @@ def create_pull_request(repo, branch, addon_id, addon_info):
         )
         payload = {
             'title': '[{}] {}'.format(addon_id, addon_info.version),
-            'head': '{}:{}'.format(gh_username, addon_id),
+            'head': '{}:{}'.format(GH_USERNAME, addon_id),
             'base': branch,
             'body': pr_body,
             'maintainer_can_modify': True,
@@ -199,7 +246,7 @@ def create_pull_request(repo, branch, addon_id, addon_info):
             PR_ENDPOINT_MASK.format(repo),
             json=payload,
             headers={'Accept': 'application/vnd.github.v3+json'},
-            auth=(gh_username, gh_token)
+            auth=(GH_USERNAME, GH_TOKEN)
         )
         if resp.status_code != 201:
             raise AddonSubmissionError(
@@ -210,7 +257,7 @@ def create_pull_request(repo, branch, addon_id, addon_info):
     elif resp.status_code == 200 and resp.json():
         logger.info(
             'Pull request in {} for {}:{} already exists.'.format(
-                branch, gh_username, addon_id)
+                branch, GH_USERNAME, addon_id)
         )
     else:
         raise AddonSubmissionError(
