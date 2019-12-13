@@ -178,7 +178,7 @@ def create_personal_fork(repo):
             time.sleep(20)
             elapsed_time += 20
         else:
-            break;
+            return
     raise AddonSubmissionError("Timeout waiting for fork creation exceeded")
 
 
