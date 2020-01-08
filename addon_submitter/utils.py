@@ -22,7 +22,7 @@ AddonInfo = namedtuple(
 )
 
 ADDON_REPO_URL_MASK = 'https://github.com/{}'
-FORK_REPO_URL_MASK = 'https://{}@github.com/{}.git'
+FORK_REPO_URL_MASK = 'https://{}:{}@github.com/{}.git'
 PR_ENDPOINT_MASK = 'https://api.github.com/repos/xbmc/{}/pulls'
 FORK_ENDPOINT_MASK = 'https://api.github.com/repos/xbmc/{}/forks'
 USER_FORK_ENDPOINT_MASK = 'https://api.github.com/repos/{}/{}'
@@ -122,7 +122,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
     logger.info('Creating addon branch...')
     email = os.environ['EMAIL']
     repo_fork = FORK_REPO_URL_MASK.format(
-        GH_USERNAME,
+        GH_USERNAME, GH_TOKEN,
         '{}/{}'.format(GH_USERNAME, repo)
     )
     repo_dir = os.path.join(work_dir, repo)
