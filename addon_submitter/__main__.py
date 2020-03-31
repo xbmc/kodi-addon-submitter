@@ -24,14 +24,15 @@ def parse_arguments():
                         help='Create a pull request')
     parser.add_argument('-s', '--subdirectory', action='store_true',
                         help='Addon is stored in its own directory within the git repo')
+    parser.add_argument('-m', '--matrix', action='store_true',
+                        help='Submit to the matrix branch as well')
     return parser.parse_args()
 
 
 def main():
     args = parse_arguments()
-    addon_info = utils.get_addon_info(
-        os.path.join(work_dir, args.addon_id if args.subdirectory else '', 'addon.xml')
-    )
+    addon_xml_path = os.path.join(work_dir, args.addon_id if args.subdirectory else '', 'addon.xml')
+    addon_info = utils.get_addon_info(addon_xml_path)
     if args.zip:
         utils.create_zip(
             args.addon_id + '-' + addon_info.version, args.addon_id, args.subdirectory
@@ -54,6 +55,17 @@ def main():
         utils.create_pull_request(
             args.repo, args.branch, args.addon_id, addon_info
         )
+    if args.matrix:
+        utils.modify_addon_xml_for_matrix(addon_xml_path)
+        utils.create_git_commit('Modify versions for matrix branch')
+        addon_info = utils.get_addon_info(addon_xml_path)
+        utils.create_addon_branch(
+            work_dir, args.repo, 'matrix', args.addon_id, addon_info.version, args.subdirectory
+        )
+        if args.pull_request:
+            utils.create_pull_request(
+                args.repo, 'matrix', args.addon_id, addon_info
+            )
 
 
 if __name__ == '__main__':
