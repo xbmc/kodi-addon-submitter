@@ -113,7 +113,8 @@ def shell(*args, **kwargs):
             subprocess.call(args, stdout=devnull, stderr=devnull)
 
 
-def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory):
+def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory,
+                        local_branch_name=None):
     """ Create and addon branch in your fork of the respective addon repo
 
     :param work_dir: working directory
@@ -122,7 +123,8 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
         e.g. 'leia'
     :param addon_id: addon ID, e.g. 'plugin.video.example'
     :param version: addon version
-    :param subdirectory:
+    :param subdirectory: addon code in a subdirectory
+    :param local_branch_name: if different from addon ID
     """
     logger.info('Creating addon branch...')
     email = os.environ['EMAIL']
@@ -138,7 +140,8 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
     os.chdir(repo)
     shell('git', 'config', 'user.name', '{}'.format(GH_USERNAME))
     shell('git', 'config', 'user.email', email)
-    shell('git', 'checkout', '-b', addon_id, 'upstream/{}'.format(branch))
+    local_branch_name = local_branch_name or addon_id
+    shell('git', 'checkout', '-b', local_branch_name, 'upstream/{}'.format(branch))
     shutil.rmtree(os.path.join(work_dir, repo, addon_id), ignore_errors=True)
     os.chdir('..')
     if subdirectory:
@@ -158,7 +161,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
     os.chdir(repo)
     shell('git', 'add', '--', addon_id)
     shell('git', 'commit', '-m', '[{}] {}'.format(addon_id, version))
-    shell('git', 'push', '-f', '-q', repo_fork, addon_id)
+    shell('git', 'push', '-f', '-q', repo_fork, local_branch_name)
     os.chdir(work_dir)
     logger.info('Addon branch created successfully.')
 
@@ -208,21 +211,22 @@ def user_fork_exists(repo):
     return resp.ok and resp_json.get('fork')
 
 
-def create_pull_request(repo, branch, addon_id, addon_info):
+def create_pull_request(repo, upstream_branch, local_branch, addon_info):
     """Create a pull request in the official repo on GitHub
 
     :param repo: addon repo name, e.g. 'repo-scripts' or 'repo-plugins'
-    :param branch: repo branch that corresponds to Kodi version codename,
+    :param upstream_branch: repo branch that corresponds to Kodi version codename,
         e.g. 'leia'
-    :param addon_id: addon ID, e.g. 'plugin.video.example'
+    :param local_branch: local branch name,
+        normally it's addon ID, e.g. 'plugin.video.example'
     :param addon_info: AddonInfo object
     """
     logger.info('Checking pull request...')
     resp = requests.get(
         PR_ENDPOINT_MASK.format(repo),
         params={
-            'head': '{}:{}'.format(GH_USERNAME, addon_id),
-            'base': branch,
+            'head': '{}:{}'.format(GH_USERNAME, local_branch),
+            'base': upstream_branch,
         },
         headers={'Accept': 'application/vnd.github.v3+json'},
         auth=(GH_USERNAME, GH_TOKEN)
@@ -236,15 +240,15 @@ def create_pull_request(repo, branch, addon_id, addon_info):
             name=addon_info.name,
             id=addon_info.id,
             version=addon_info.version,
-            kodi_repo_branch=branch,
+            kodi_repo_branch=upstream_branch,
             addon_gh_url=addon_info.gh_url,
             description=addon_info.description,
             news=addon_info.news
         )
         payload = {
-            'title': '[{}] {}'.format(addon_id, addon_info.version),
-            'head': '{}:{}'.format(GH_USERNAME, addon_id),
-            'base': branch,
+            'title': '[{}] {}'.format(local_branch, addon_info.version),
+            'head': '{}:{}'.format(GH_USERNAME, local_branch),
+            'base': upstream_branch,
             'body': pr_body,
             'maintainer_can_modify': True,
         }
@@ -263,7 +267,7 @@ def create_pull_request(repo, branch, addon_id, addon_info):
     elif resp.status_code == 200 and resp.json():
         logger.info(
             'Pull request in {} for {}:{} already exists.'.format(
-                branch, GH_USERNAME, addon_id)
+                upstream_branch, GH_USERNAME, local_branch)
         )
     else:
         raise AddonSubmissionError(
@@ -291,5 +295,4 @@ def modify_addon_xml_for_matrix(addon_xml_path):
 
 
 def create_git_commit(message):
-    shell('git', 'add', '.')
-    shell('git', 'commit', '-m', message)
+    shell('git', 'commit', '-a', '-m', message)
