@@ -159,6 +159,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory)
     shell('git', 'add', '--', addon_id)
     shell('git', 'commit', '-m', '[{}] {}'.format(addon_id, version))
     shell('git', 'push', '-f', '-q', repo_fork, addon_id)
+    os.chdir(work_dir)
     logger.info('Addon branch created successfully.')
 
 

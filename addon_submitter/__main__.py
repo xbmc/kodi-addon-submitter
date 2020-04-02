@@ -56,6 +56,7 @@ def main():
             args.repo, args.branch, args.addon_id, addon_info
         )
     if args.matrix:
+        os.chdir(work_dir)
         utils.modify_addon_xml_for_matrix(addon_xml_path)
         utils.create_git_commit('Modify versions for matrix branch')
         addon_info = utils.get_addon_info(addon_xml_path)
