@@ -89,6 +89,11 @@ Run `submit-addon` script with the following options:
   already exists, the script will simply update the addon branch in your
   repository fork.
 - `-s`, `--subdirectory`: Addon is stored in its own directory within the git repo
+- `-m`, `--matrix`: Submit a Python 2/3 compatible addon to `matrix` branch
+  in addition to the target branch. This can be used if you want to update
+  a Python 2/3 compatible addon both in `matrix` (Kodi 19.x) and a lower
+  branch at the same time. Do not use this option if you want to submit
+  a Python 3 addon only to `matrix` branch. Use `-b` option for this.
 
 Example:
 ```bash
