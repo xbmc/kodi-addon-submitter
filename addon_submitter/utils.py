@@ -28,8 +28,6 @@ PR_ENDPOINT_MASK = 'https://api.github.com/repos/xbmc/{}/pulls'
 FORK_ENDPOINT_MASK = 'https://api.github.com/repos/xbmc/{}/forks'
 USER_FORK_ENDPOINT_MASK = 'https://api.github.com/repos/{}/{}'
 
-GH_USERNAME = os.environ['GH_USERNAME']
-GH_TOKEN = os.environ['GH_TOKEN']
 
 ADDON_VERSION_RE = re.compile(r'(<addon.+?version=")([^"]+)(")', re.I | re.DOTALL)
 XBMC_PYTHON_VERSION_RE = re.compile(r'(addon="xbmc.python".+?version=")([^"]+)(")',
@@ -114,7 +112,7 @@ def shell(*args, **kwargs):
 
 
 def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory,
-                        local_branch_name=None):
+                        gh_username, gh_token, user_email, local_branch_name=None):
     """ Create and addon branch in your fork of the respective addon repo
 
     :param work_dir: working directory
@@ -124,13 +122,15 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory,
     :param addon_id: addon ID, e.g. 'plugin.video.example'
     :param version: addon version
     :param subdirectory: addon code in a subdirectory
+    :param gh_username: GitHub username
+    :param gh_token: GitHub API token
+    :param user_email: user's email
     :param local_branch_name: if different from addon ID
     """
     logger.info('Creating addon branch...')
-    email = os.environ['EMAIL']
     repo_fork = FORK_REPO_URL_MASK.format(
-        GH_USERNAME, GH_TOKEN,
-        '{}/{}'.format(GH_USERNAME, repo)
+        gh_username, gh_token,
+        '{}/{}'.format(gh_username, repo)
     )
     repo_dir = os.path.join(work_dir, repo)
     if os.path.exists(repo_dir):
@@ -138,8 +138,8 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory,
     shell('git', 'clone', '--branch', branch, '--origin', 'upstream',
           '--single-branch', 'git://github.com/xbmc/{}.git'.format(repo))
     os.chdir(repo)
-    shell('git', 'config', 'user.name', '{}'.format(GH_USERNAME))
-    shell('git', 'config', 'user.email', email)
+    shell('git', 'config', 'user.name', '{}'.format(gh_username))
+    shell('git', 'config', 'user.email', user_email)
     local_branch_name = local_branch_name or addon_id
     shell('git', 'checkout', '-b', local_branch_name, 'upstream/{}'.format(branch))
     shutil.rmtree(os.path.join(work_dir, repo, addon_id), ignore_errors=True)
@@ -166,17 +166,19 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory,
     logger.info('Addon branch created successfully.')
 
 
-def create_personal_fork(repo):
+def create_personal_fork(repo, gh_username, gh_token):
     """Create a personal fork for the official repo on GitHub
 
     :param repo: addon repo name, e.g. 'repo-scripts' or 'repo-plugins'
+    :param gh_username: GitHub username
+    :param gh_token: GitHub API token
     """
     resp = requests.post(
         FORK_ENDPOINT_MASK.format(
             repo
         ),
         headers={'Accept': 'application/vnd.github.v3+json'},
-        auth=(GH_USERNAME, GH_TOKEN)
+        auth=(gh_username, gh_token)
     )
     # see: https://developer.github.com/v3/repos/forks/#create-a-forkCheck
     # this is an async operation, wait for a maximum of 5 minutes for the fork
@@ -191,27 +193,30 @@ def create_personal_fork(repo):
     raise AddonSubmissionError("Timeout waiting for fork creation exceeded")
 
 
-def user_fork_exists(repo):
+def user_fork_exists(repo, gh_username, gh_token):
     """Check if the user has a fork of the repository on Github
 
     :param repo: addon repo name, e.g. 'repo-scripts' or 'repo-plugins'
+    :param gh_username: GitHub username
+    :param gh_token: GitHub API token
     """
     resp = requests.get(
         USER_FORK_ENDPOINT_MASK.format(
-            GH_USERNAME,
+            gh_username,
             repo
         ),
         headers={'Accept': 'application/vnd.github.v3+json'},
         params={
             'type': 'all'
         },
-        auth=(GH_USERNAME, GH_TOKEN)
+        auth=(gh_username, gh_token)
     )
     resp_json = resp.json()
     return resp.ok and resp_json.get('fork')
 
 
-def create_pull_request(repo, upstream_branch, local_branch, addon_info):
+def create_pull_request(repo, upstream_branch, local_branch, addon_info,
+                        gh_username, gh_token):
     """Create a pull request in the official repo on GitHub
 
     :param repo: addon repo name, e.g. 'repo-scripts' or 'repo-plugins'
@@ -220,16 +225,18 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info):
     :param local_branch: local branch name,
         normally it's addon ID, e.g. 'plugin.video.example'
     :param addon_info: AddonInfo object
+    :param gh_username: GitHub username
+    :param gh_token: GitHub API token
     """
     logger.info('Checking pull request...')
     resp = requests.get(
         PR_ENDPOINT_MASK.format(repo),
         params={
-            'head': '{}:{}'.format(GH_USERNAME, local_branch),
+            'head': '{}:{}'.format(gh_username, local_branch),
             'base': upstream_branch,
         },
         headers={'Accept': 'application/vnd.github.v3+json'},
-        auth=(GH_USERNAME, GH_TOKEN)
+        auth=(gh_username, gh_token)
     )
     logger.debug(resp.json())
     if resp.status_code == 200 and not resp.json():
@@ -247,7 +254,7 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info):
         )
         payload = {
             'title': '[{}] {}'.format(local_branch, addon_info.version),
-            'head': '{}:{}'.format(GH_USERNAME, local_branch),
+            'head': '{}:{}'.format(gh_username, local_branch),
             'base': upstream_branch,
             'body': pr_body,
             'maintainer_can_modify': True,
@@ -256,7 +263,7 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info):
             PR_ENDPOINT_MASK.format(repo),
             json=payload,
             headers={'Accept': 'application/vnd.github.v3+json'},
-            auth=(GH_USERNAME, GH_TOKEN)
+            auth=(gh_username, gh_token)
         )
         if resp.status_code != 201:
             raise AddonSubmissionError(
@@ -267,7 +274,7 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info):
     elif resp.status_code == 200 and resp.json():
         logger.info(
             'Pull request in {} for {}:{} already exists.'.format(
-                upstream_branch, GH_USERNAME, local_branch)
+                upstream_branch, gh_username, local_branch)
         )
     else:
         raise AddonSubmissionError(
