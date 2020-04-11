@@ -84,11 +84,15 @@ def get_addon_info(xml_path):
         news = news_tag.text
     else:
         news = ''
-    repo_slug = os.environ.get('TRAVIS_REPO_SLUG')
-    if repo_slug:
-        gh_url = ADDON_REPO_URL_MASK.format(repo_slug)
+    source_tag = addon_tag.find('.//source')
+    if source_tag is not None:
+        gh_url = source_tag.text
     else:
-        gh_url = ''
+        repo_slug = os.environ.get('TRAVIS_REPO_SLUG') or os.environ.get('GITHUB_REPOSITORY')
+        if repo_slug:
+            gh_url = ADDON_REPO_URL_MASK.format(repo_slug)
+        else:
+            gh_url = ''
     return AddonInfo(
         addon_tag.attrib.get('id'),
         addon_tag.attrib.get('name'),
@@ -185,7 +189,7 @@ def create_personal_fork(repo, gh_username, gh_token):
     # to be created (with 20 seconds pause between checks)
     elapsed_time = 0
     while elapsed_time < 5 * 60:
-        if not user_fork_exists(repo):
+        if not user_fork_exists(repo, gh_username, gh_token):
             time.sleep(20)
             elapsed_time += 20
         else:
@@ -297,6 +301,16 @@ def modify_addon_xml_for_matrix(addon_xml_path):
     matrix_addon_version_mask = r'\g<1>{}\g<3>'.format(matrix_addon_version)
     addon_xml = ADDON_VERSION_RE.sub(matrix_addon_version_mask, addon_xml)
     addon_xml = XBMC_PYTHON_VERSION_RE.sub(r'\g<1>3.0.0\g<3>', addon_xml)
+    write_addonxml(addon_xml_path, addon_xml)
+
+
+def get_addonxml_content(addon_xml_path):
+    logger.info('Getting addon.xml file content')
+    with open(addon_xml_path, 'r', encoding='utf-8') as addonxml:
+        return addonxml.read()
+
+
+def write_addonxml(addon_xml_path, addon_xml):
     with open(addon_xml_path, 'w', encoding='utf-8') as fo:
         fo.write(addon_xml)
 
