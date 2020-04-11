@@ -294,6 +294,16 @@ def modify_addon_xml_for_matrix(addon_xml_path):
     matrix_addon_version_mask = r'\g<1>{}\g<3>'.format(matrix_addon_version)
     addon_xml = ADDON_VERSION_RE.sub(matrix_addon_version_mask, addon_xml)
     addon_xml = XBMC_PYTHON_VERSION_RE.sub(r'\g<1>3.0.0\g<3>', addon_xml)
+    write_addonxml(addon_xml_path, addon_xml)
+
+
+def get_addonxml_content(addon_xml_path):
+    logger.info('Getting addon.xml file content')
+    with open(addon_xml_path, 'r', encoding='utf-8') as addonxml:
+        return addonxml.read()
+
+
+def write_addonxml(addon_xml_path, addon_xml):
     with open(addon_xml_path, 'w', encoding='utf-8') as fo:
         fo.write(addon_xml)
 
