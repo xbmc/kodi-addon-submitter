@@ -86,11 +86,15 @@ def get_addon_info(xml_path):
         news = news_tag.text
     else:
         news = ''
-    repo_slug = os.environ.get('TRAVIS_REPO_SLUG')
-    if repo_slug:
-        gh_url = ADDON_REPO_URL_MASK.format(repo_slug)
+    source_tag = addon_tag.find('.//source')
+    if source_tag is not None:
+        gh_url = source_tag.text
     else:
-        gh_url = ''
+        repo_slug = os.environ.get('TRAVIS_REPO_SLUG') or os.environ.get('GITHUB_REPOSITORY')
+        if repo_slug:
+            gh_url = ADDON_REPO_URL_MASK.format(repo_slug)
+        else:
+            gh_url = ''
     return AddonInfo(
         addon_tag.attrib.get('id'),
         addon_tag.attrib.get('name'),
