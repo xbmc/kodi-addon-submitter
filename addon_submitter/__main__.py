@@ -63,24 +63,25 @@ def main():
         if not utils.user_fork_exists(args.repo):
             utils.create_personal_fork(args.repo)
 
+        local_branch_name = '{}@{}'.format(args.addon_id, args.branch)
         utils.create_addon_branch(
             work_dir, args.repo, args.branch, args.addon_id, addon_info.version, args.subdirectory,
-            local_branch_name='{}@{}'.format(args.addon_id, args.branch)
+            local_branch_name=local_branch_name
         )
 
         if args.pull_request:
             utils.create_pull_request(
-                args.repo, args.branch, args.addon_id, addon_info
+                args.repo, args.branch, local_branch_name, addon_info
             )
         if args.matrix:
             os.chdir(work_dir)
             utils.modify_addon_xml_for_matrix(addon_xml_path)
             utils.create_git_commit('Modify versions for matrix branch')
             addon_info = utils.get_addon_info(addon_xml_path)
-            local_branch_name = args.addon_id + '@matrix'
+            local_branch_name = '{}@{}'.format(args.addon_id, '@matrix')
             utils.create_addon_branch(
                 work_dir, args.repo, 'matrix', args.addon_id, addon_info.version, args.subdirectory,
-                local_branch_name = '{}@{}'.format(args.addon_id, '@matrix')
+                local_branch_name = local_branch_name
             )
             if args.pull_request:
                 utils.create_pull_request(
