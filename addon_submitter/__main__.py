@@ -64,7 +64,8 @@ def main():
             utils.create_personal_fork(args.repo)
 
         utils.create_addon_branch(
-            work_dir, args.repo, args.branch, args.addon_id, addon_info.version, args.subdirectory
+            work_dir, args.repo, args.branch, args.addon_id, addon_info.version, args.subdirectory,
+            local_branch_name='{}@{}'.format(args.addon_id, args.branch)
         )
 
         if args.pull_request:
@@ -79,7 +80,7 @@ def main():
             local_branch_name = args.addon_id + '@matrix'
             utils.create_addon_branch(
                 work_dir, args.repo, 'matrix', args.addon_id, addon_info.version, args.subdirectory,
-                local_branch_name=local_branch_name
+                local_branch_name = '{}@{}'.format(args.addon_id, '@matrix')
             )
             if args.pull_request:
                 utils.create_pull_request(
