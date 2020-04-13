@@ -248,7 +248,6 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info,
         headers={'Accept': 'application/vnd.github.v3+json'},
         auth=(gh_username, gh_token)
     )
-    logger.debug(pformat(resp.json()))
     if resp.status_code == 200 and not resp.json():
         logger.info('Submitting pull request...')
         with open(os.path.join(this_dir, 'pr-template.md'), 'r', encoding='utf-8') as fo:
@@ -280,9 +279,8 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info,
             logger.debug('Pull request URL: {}'.format(url))
             logger.debug('Pull request payload: {}'.format(pformat(payload)))
             raise AddonSubmissionError(
-                'GitHub API error: {}\n{}'.format(resp.status_code, resp.text)
+                'GitHub API error: {}\n{}'.format(resp.status_code, pformat(resp.json()))
             )
-        logger.debug(pformat(resp.json()))
         logger.info('Pull request submitted successfully:')
     elif resp.status_code == 200 and resp.json():
         logger.info(
@@ -291,7 +289,7 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info,
         )
     else:
         raise AddonSubmissionError(
-            'Unexpected GitHub error: {}\n{}'.format(resp.status_code, resp.text)
+            'Unexpected GitHub error: {}\n{}'.format(resp.status_code, pformat(resp.json()))
         )
 
 
@@ -325,4 +323,4 @@ def write_addonxml(addon_xml_path, addon_xml):
 
 
 def create_git_commit(message):
-    shell('git', 'commit', '-a', '-m', message)
+    os.system('git commit -a -m "{}"'.format(message))
