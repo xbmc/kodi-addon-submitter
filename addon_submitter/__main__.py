@@ -42,7 +42,7 @@ def main():
     addon_xml_originalcontent = utils.get_addonxml_content(addon_xml_path)
     addon_info = utils.get_addon_info(addon_xml_path)
     gh_username = os.getenv('GH_USERNAME') or args.gh_username
-    gh_token = os.getenv('GH_TOKEN') or os.getenv('GITHUB_TOKEN') or args.gh_token
+    gh_token = os.getenv('GH_TOKEN') or args.gh_token
     user_email = os.getenv('EMAIL') or args.user_email
     if args.zip:
         utils.create_zip(
