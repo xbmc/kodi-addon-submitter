@@ -78,7 +78,7 @@ def main():
         local_branch_name = '{}@{}'.format(args.addon_id, args.branch)
         utils.create_addon_branch(
             work_dir, args.repo, args.branch, args.addon_id, addon_info.version,
-            gh_username, gh_username, user_email, args.subdirectory,
+            args.subdirectory, gh_username, gh_token, user_email,
             local_branch_name=local_branch_name
         )
         if args.pull_request:
