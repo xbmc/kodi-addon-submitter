@@ -83,7 +83,7 @@ def main():
         )
         if args.pull_request:
             utils.create_pull_request(
-                args.repo, args.branch, args.addon_id, addon_info, gh_username, gh_token
+                args.repo, args.branch, local_branch_name, addon_info, gh_username, gh_token
             )
         if args.matrix:
             os.chdir(work_dir)
