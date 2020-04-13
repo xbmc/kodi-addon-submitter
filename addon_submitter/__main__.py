@@ -64,7 +64,11 @@ def main():
         if not (gh_username and gh_token and user_email):
             raise utils.AddonSubmissionError(
                 'GitHub username, token and user email must be specified '
-                'either via environment variables or as command line arguments'
+                'either via environment variables or as command line arguments.\n'
+                'Provided parameters:\n'
+                'GitHub username: {}, GitHub token: {}, user email: {}'.format(
+                    bool(gh_username), bool(gh_token), bool(user_email)
+                )
             )
         # restore addon info (a zip modifying addon.xml might have been created before)
         addon_info = utils.get_addon_info(addon_xml_path)
