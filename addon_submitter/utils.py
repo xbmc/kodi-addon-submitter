@@ -7,6 +7,7 @@ import subprocess
 import sys
 from collections import namedtuple
 from io import open
+from pprint import pformat
 from xml.etree import ElementTree as etree
 import requests
 import time
@@ -177,6 +178,7 @@ def create_personal_fork(repo, gh_username, gh_token):
     :param gh_username: GitHub username
     :param gh_token: GitHub API token
     """
+    logger.info('Creating a personal fork of {}...'.format(repo))
     resp = requests.post(
         FORK_ENDPOINT_MASK.format(
             repo
@@ -184,17 +186,21 @@ def create_personal_fork(repo, gh_username, gh_token):
         headers={'Accept': 'application/vnd.github.v3+json'},
         auth=(gh_username, gh_token)
     )
-    # see: https://developer.github.com/v3/repos/forks/#create-a-forkCheck
-    # this is an async operation, wait for a maximum of 5 minutes for the fork
-    # to be created (with 20 seconds pause between checks)
-    elapsed_time = 0
-    while elapsed_time < 5 * 60:
-        if not user_fork_exists(repo, gh_username, gh_token):
-            time.sleep(20)
-            elapsed_time += 20
-        else:
-            return
-    raise AddonSubmissionError("Timeout waiting for fork creation exceeded")
+    if resp.ok:
+        # see: https://developer.github.com/v3/repos/forks/#create-a-forkCheck
+        # this is an async operation, wait for a maximum of 5 minutes for the fork
+        # to be created (with 20 seconds pause between checks)
+        elapsed_time = 0
+        while elapsed_time < 5 * 60:
+            if not user_fork_exists(repo, gh_username, gh_token):
+                time.sleep(20)
+                elapsed_time += 20
+            else:
+                return
+        raise AddonSubmissionError("Timeout waiting for fork creation exceeded")
+    raise AddonSubmissionError(
+        'GitHub API error: {}\n{}'.format(resp.status_code, resp.text)
+    )
 
 
 def user_fork_exists(repo, gh_username, gh_token):
@@ -242,7 +248,7 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info,
         headers={'Accept': 'application/vnd.github.v3+json'},
         auth=(gh_username, gh_token)
     )
-    logger.debug(resp.json())
+    logger.debug(pformat(resp.json()))
     if resp.status_code == 200 and not resp.json():
         logger.info('Submitting pull request...')
         with open(os.path.join(this_dir, 'pr-template.md'), 'r', encoding='utf-8') as fo:
@@ -263,17 +269,20 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info,
             'body': pr_body,
             'maintainer_can_modify': True,
         }
+        url = PR_ENDPOINT_MASK.format(repo)
         resp = requests.post(
-            PR_ENDPOINT_MASK.format(repo),
+            url,
             json=payload,
             headers={'Accept': 'application/vnd.github.v3+json'},
             auth=(gh_username, gh_token)
         )
         if resp.status_code != 201:
+            logger.debug('Pull request URL: {}'.format(url))
+            logger.debug('Pull request payload: {}'.format(pformat(payload)))
             raise AddonSubmissionError(
                 'GitHub API error: {}\n{}'.format(resp.status_code, resp.text)
             )
-        logger.debug(resp.json())
+        logger.debug(pformat(resp.json()))
         logger.info('Pull request submitted successfully:')
     elif resp.status_code == 200 and resp.json():
         logger.info(
@@ -282,7 +291,7 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info,
         )
     else:
         raise AddonSubmissionError(
-            'Unexpected GitHub error: {}'.format(resp.status_code)
+            'Unexpected GitHub error: {}\n{}'.format(resp.status_code, resp.text)
         )
 
 
