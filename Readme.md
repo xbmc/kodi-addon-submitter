@@ -4,7 +4,7 @@ This is a command line script for automating submission of addons for
 [Kodi Mediacenter](https://kodi.tv) to the official addon repository.
 The utility automates the steps for preparing and creating addon submission
 pull requests to one of the addon repositories: `xbmc/repo-plugins` or
-`xbmc/repo-scrips`. It is meant for using primarily in CI/CD pipelines, e.g.
+`xbmc/repo-scripts`. It is meant for using primarily in CI/CD pipelines, e.g.
 in [Travis CI](https://travis-ci.org/).
 
 The script is compatible with Python 2.7 and 3+.
