@@ -58,15 +58,11 @@ def create_zip(zip_name, addon_id, subdirectory):
     """
     logger.info('Creating ZIP file...')
     if subdirectory:
-        shell(
-            'sh', '-c',
-            'HASH=$(git stash create); git archive -o %s.zip ${HASH:-HEAD} -- %s' % (zip_name, addon_id)
-        )
+        shell('git', 'archive', '-o', '{}.zip'.format(zip_name), 'HEAD', '--',
+              addon_id)
     else:
-        shell(
-            'sh', '-c',
-            'HASH=$(git stash create); git archive -o %s.zip --prefix %s/ ${HASH:-HEAD}' % (zip_name, addon_id)
-        )
+        shell('git', 'archive', '-o', '{}.zip'.format(zip_name),
+              '--prefix', '{}/'.format(addon_id), 'HEAD')
     logger.info('ZIP created successfully.')
 
 
