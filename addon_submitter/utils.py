@@ -141,7 +141,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory,
     if os.path.exists(repo_dir):
         shutil.rmtree(repo_dir)
     shell('git', 'clone', '--branch', branch, '--origin', 'upstream',
-          '--single-branch', 'git://github.com/xbmc/{}.git'.format(repo))
+          '--single-branch', 'https://github.com/xbmc/{}.git'.format(repo))
     os.chdir(repo)
     shell('git', 'config', '--global', 'user.name', '{}'.format(gh_username))
     shell('git', 'config', '--global', 'user.email', user_email)
