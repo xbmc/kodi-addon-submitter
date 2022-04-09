@@ -283,7 +283,7 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info,
             )
         logger.info('Pull request submitted successfully:')
     elif resp.status_code == 200 and resp.json():
-        logger.info(
+        raise AddonSubmissionError(
             'Pull request in {} for {}:{} already exists.'.format(
                 upstream_branch, gh_username, local_branch)
         )
