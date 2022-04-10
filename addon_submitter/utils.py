@@ -132,7 +132,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory,
     :param user_email: user's email
     :param local_branch_name: if different from addon ID
     """
-    logger.info('Creating addon branch...')
+    logger.info('Creating addon branch "{}"...'.format(branch))
     repo_fork = FORK_REPO_URL_MASK.format(
         gh_username, gh_token,
         '{}/{}'.format(gh_username, repo)
@@ -168,7 +168,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory,
     shell('git', 'commit', '-m', '[{}] {}'.format(addon_id, version))
     shell('git', 'push', '-f', '-q', repo_fork, local_branch_name)
     os.chdir(work_dir)
-    logger.info('Addon branch created successfully.')
+    logger.info('Addon branch "{}" created successfully.'.format(branch))
 
 
 def create_personal_fork(repo, gh_username, gh_token):
@@ -283,7 +283,7 @@ def create_pull_request(repo, upstream_branch, local_branch, addon_info,
             )
         logger.info('Pull request submitted successfully:')
     elif resp.status_code == 200 and resp.json():
-        logger.info(
+        raise AddonSubmissionError(
             'Pull request in {} for {}:{} already exists.'.format(
                 upstream_branch, gh_username, local_branch)
         )
