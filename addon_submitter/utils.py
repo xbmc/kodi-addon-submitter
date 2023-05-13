@@ -145,6 +145,7 @@ def create_addon_branch(work_dir, repo, branch, addon_id, version, subdirectory,
     os.chdir(repo)
     shell('git', 'config', '--global', 'user.name', '{}'.format(gh_username))
     shell('git', 'config', '--global', 'user.email', user_email)
+    shell('git', 'fetch', 'upstream')
     local_branch_name = local_branch_name or addon_id
     shell('git', 'checkout', '-b', local_branch_name, 'upstream/{}'.format(branch))
     shutil.rmtree(os.path.join(work_dir, repo, addon_id), ignore_errors=True)
