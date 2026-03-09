@@ -4,11 +4,11 @@ This is a command line script for automating submission of addons for
 [Kodi Mediacenter](https://kodi.tv) to the official addon repository.
 The utility automates the steps for preparing and creating addon submission
 pull requests to one of the addon repositories: `xbmc/repo-plugins` or
-`xbmc/repo-scripts`. It is meant for using primarily in CI/CD pipelines, e.g.
-in [Travis CI](https://travis-ci.org/).
+`xbmc/repo-scripts`. It is meant for use primarily in CI/CD pipelines,
+for example with GitHub Actions.
 
 The script is compatible with Python 2.7 and 3+.
- 
+
 
 ## Prerequisites
 
@@ -27,11 +27,11 @@ The script is compatible with Python 2.7 and 3+.
     +--icon.png
     |
     +--.gitignore
-    +--.travis.yml
+    +--.github/workflows/submit.yml
     +--Readme.md
     ```
-    To not pollute your addon submission with unnecessary files, such as `.gitignore`, `.travis.yml` etc.
-    those can be exluded by using git-archive and setting the [export-ignore attribute]
+    To avoid polluting your addon submission with unnecessary files, such as `.gitignore` and workflow files,
+    those can be excluded by using git-archive and setting the [export-ignore attribute]
     (https://git-scm.com/docs/gitattributes#_creating_an_archive).
   - Your addon files must be located in a separate addon directory, e.g.
    `/plugin.video.example` inside your Git repository. That is, your Git repo for
@@ -49,7 +49,7 @@ The script is compatible with Python 2.7 and 3+.
     |  +--icon.png
     |
     +--.gitignore
-    +--.travis.yml
+    +--.github/workflows/submit.yml
     +--Readme.md
     ```
 - Fork the necessary addon repository -- `xbmc/repo-plugins` or
@@ -62,7 +62,7 @@ The script is compatible with Python 2.7 and 3+.
   that describes the changes made in the latest version being submitted.
   The contents of the `<news>` tag will be automatically added to
   a pull request message.
-  
+
 ## Installation
 
 The Addon Submitter utility is installed from this repository with pip:
@@ -100,35 +100,45 @@ Example:
 submit-addon -r repo-plugins -b leia --pull-request plugin.video.example
 ```
 
-## Example Travis CI Configuration
+## Example GitHub Actions Workflow
 
 ```yaml
-language: python
-python: "3.6"
-install: echo "Install test dependencies"
-script: echo "Run tests"
-before_deploy:
-  - pip install git+https://github.com/romanvm/kodi-addon-submitter.git
-  - submit-addon -z plugin.video.example # Create an installable ZIP
-  - export RELEASE_ZIP=$(ls *.zip)
-deploy:
-  # Publish an installable ZIP to GitHub Releases
-  - provider: releases
-    api_key: $GH_TOKEN
-    file_glob: true
-    file: $RELEASE_ZIP
-    skip_cleanup: true
-    on:
-      tags: true
-  # Submit to the official Kodi repo
-  - provider: script
-    script: submit-addon -r repo-plugins -b leia --pull-request plugin.video.example
-    on:
-      tags: true
-notifications:
-  email: false
+name: Submit Kodi Addon
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install addon submitter
+        run: pip install git+https://github.com/romanvm/kodi-addon-submitter.git
+
+      - name: Create release ZIP
+        run: submit-addon -z plugin.video.example
+
+      - name: Publish release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: '*.zip'
+
+      - name: Submit to Kodi addon repository
+        env:
+          GH_USERNAME: ${{ secrets.GH_USERNAME }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          EMAIL: ${{ secrets.EMAIL }}
+        run: submit-addon -r repo-plugins -b leia --pull-request plugin.video.example
 ```
-This config automatically publish your addon to "Releases" section of your
+This config automatically publishes your addon to the "Releases" section of your
 addon repository and creates a pull request in the official Kodi addon repository
 when a new git tag is pushed to your addon repository. So with this config simply
 run
@@ -136,4 +146,8 @@ run
 git tag <version number>
 git push --tags
 ```
-to submit your addon. Everything else will be done automatically by Travis CI.
+to submit your addon. Everything else will be done automatically by GitHub Actions.
+
+`GH_USERNAME` must be the username that owns the fork targeted by `GH_TOKEN`.
+Using `${{ github.actor }}` can fail when the workflow actor is different from the
+token owner.
